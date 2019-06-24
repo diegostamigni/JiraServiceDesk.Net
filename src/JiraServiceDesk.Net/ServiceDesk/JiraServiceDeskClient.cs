@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Flurl.Http;
+using Flurl.Http.Content;
 using JiraServiceDesk.Net.Models.Common;
 using JiraServiceDesk.Net.Models.Organization;
 using JiraServiceDesk.Net.Models.ServiceDesk;
@@ -52,6 +53,23 @@ namespace JiraServiceDesk.Net
             return await HandleResponseAsync<IEnumerable<TemporaryAttachment>>(response, s => JsonConvert.DeserializeObject<TemporaryAttachmentsResult>(s).TemporaryAttachments).ConfigureAwait(false);
         }
 
+        public async Task<IEnumerable<TemporaryAttachment>> AttachTemporaryFileToServiceDeskAsync(string serviceDeskId, IEnumerable<string> filePaths)
+        {
+            var content = new CapturedMultipartContent();
+
+            foreach (var filePath in filePaths)
+            {
+                content.AddFile("file", File.OpenRead(filePath), Path.GetFileName(filePath));
+            }
+
+            var response = await GetServiceDeskUrl(serviceDeskId)
+                .AppendPathSegment("/attachTemporaryFile")
+                .SendAsync(HttpMethod.Post, content)
+                .ConfigureAwait(false);
+
+            return await HandleResponseAsync<IEnumerable<TemporaryAttachment>>(response, s => JsonConvert.DeserializeObject<TemporaryAttachmentsResult>(s).TemporaryAttachments).ConfigureAwait(false);
+        }
+
         public async Task<PagedResults<User>> AddCustomersToServiceDeskAsync(string serviceDeskId, IEnumerable<string> userNames)
         {
             var data = new
@@ -67,7 +85,7 @@ namespace JiraServiceDesk.Net
             return await HandleResponseAsync<PagedResults<User>>(response).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Organization>> GetServiceDeskOrganizationsAsync(string serviceDeskId, 
+        public async Task<IEnumerable<Organization>> GetServiceDeskOrganizationsAsync(string serviceDeskId,
             int? maxPages = null,
             int? limit = null,
             int? start = null)

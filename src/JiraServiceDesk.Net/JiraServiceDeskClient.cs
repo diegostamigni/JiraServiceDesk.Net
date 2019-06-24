@@ -31,7 +31,7 @@ namespace JiraServiceDesk.Net
             .AppendPathSegment("/rest/servicedeskapi")
             .WithBasicAuth(_userName, _password)
             .WithHeader("X-Atlassian-Token", "nocheck")
-            .WithHeader("X-ExperimentalApi", true)
+            .WithHeader("X-ExperimentalApi", "opt-in")
             .ConfigureRequest(settings => settings.JsonSerializer = s_serializer);
 
         private async Task<TResult> ReadResponseContentAsync<TResult>(HttpResponseMessage responseMessage, Func<string, TResult> contentHandler = null)
